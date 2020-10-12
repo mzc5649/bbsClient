@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <!-- css -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/mzc5649/CDN/bulma-0.9.0/css/bulma.css">
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/mzc5649/CDN/element-ui@2.13.1/lib/theme-chalk/index.css">
+    <!-- js -->
+    <script src="https://cdn.jsdelivr.net/gh/mzc5649/CDN/vue/2.6.11/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/mzc5649/CDN/typerwriterJS/1.0.0/typewriter.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/mzc5649/CDN/axios@0.20.0/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/mzc5649/CDN/jquery@1.12.4/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/mzc5649/CDN/element-ui@2.13.1/lib/index.js"></script>
+</head>
+<body>
+<div id="thread" v-cloak>
+    <div id="header"></div>
+    <section id="section" class="hero bg-rainbow">
+        <div class="hero-body">
+            <div class="container">
+                <div style="font-size: 30px">程序员社区</div>
+                <span style="font-size: 20px" id="typerWriter"></span>
+            </div>
+        </div>
+    </section>
+    <div id="main" class="container is-fluid">
+        <div class="columns">
+            <div class="column is-2">
+                <div class="" style="font-size: 20px;margin-bottom: 12px">
+                    <i class="el-icon-s-grid"></i>
+                    板块分类
+                </div>
+                <ul class="classify-list">
+                    <li class="classify-item" v-for="(item,index) in bbsAllClassifyData"
+                        style="position: relative;"
+                        @mouseenter="mouseenter($event)" @mouseleave="mouseleave($event)">
+                        <el-card shadow="hover" :body-style="{ padding: '0px',height:'50px' }">
+                            <a style="color: black;width: 100%;height: 100%;display: flex;align-items: center;padding-left: 20px"
+                               :href="'thread.html?cId='+item.cId">{{item.cName}}</a>
+                        </el-card>
+                        <div class="showdata">
+                            <el-row>
+                                <template v-for="(item1,index1) in item.bbsSections">
+                                    <el-col :span="6">
+                                        <el-card shadow="hover" :body-style="{ padding: '0px' }">
+                                            <a class="showdata-item"
+                                               style="color: black;width: 100%;height: 50px;display: flex;justify-content: center;align-items: center;"
+                                               :href="'thread.html?sId='+item1.sId">
+                                                {{item1.sName}}
+                                            </a>
+                                        </el-card>
+                                    </el-col>
+                                </template>
+                            </el-row>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+            <div class="column is-10">
+                <div v-if="bbsSectionId!=''" class="main-right">
+                    <!--面包屑-->
+                    <nav class="breadcrumb has-succeeds-separator" aria-label="breadcrumbs">
+                        <ul style="font-size: 13px">
+                            <li><a href="index.html">社区</a></li>
+                            <li><a :href="'thread.html?cId='+bbsSectionData.bbsClassify.cId">{{bbsSectionData.bbsClassify.cName}}</a>
+                            </li>
+                            <li class="is-active"><a href="#" aria-current="page">{{bbsSectionData.sName}}</a></li>
+                        </ul>
+                    </nav>
+                    <div class="marin-right-info">
+                        <el-avatar shape="square" :size="100" :fit="'fill'" :src="bbsSectionData.sImg"></el-avatar>
+                        <div>
+                            <div style="padding-left:  20px;font-size: 20px;font-weight: 600">
+                                #{{bbsSectionData.sName}}
+                                <a :href="'post.html?sId='+bbsSectionData.sId">
+                                    <el-button type="primary" size="small" icon="el-icon-edit"
+                                               style="margin-left: 14px">发帖
+                                    </el-button>
+                                </a>
+
+                            </div>
+                            <div style="padding:10px 0 0px 20px">
+                                版主：{{bbsSectionData.uName}}
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <el-row :gutter="20">
+                            <el-col :span="3">
+                                <div class="sort-item"  v-bind:class="{'sort-item-select': bbsSortId==0}" @click="changeSortToAll">
+                                    全部
+                                </div>
+                            </el-col>
+                            <template v-for="(item,index) in bbsSortData">
+                                <el-col :span="3">
+                                    <div class="sort-item" v-bind:class="{'sort-item-select': bbsSortId==item.ssId}" @click="changeSort(item)">
+                                        {{item.ssName}}
+                                    </div>
+                                </el-col>
+                            </template>
+                        </el-row>
+                    </div>
+                    <div class="bbs-section-type">
+                        <div class="bbs-section-type-item active" @click="changBBSSectionType($event,1)">最新回复</div>
+                        <div class="bbs-section-type-item" @click="changBBSSectionType($event,2)">最新发布</div>
+                    </div>
+                    <el-row class="list-title">
+                        <el-col :span="12" style="padding: 12px 30px 12px 20px">标题</el-col>
+                        <el-col :span="4" style="padding: 12px 30px 12px 0px">作者</el-col>
+                        <el-col :span="4" style="padding: 12px 30px 12px 0px">浏览数</el-col>
+                        <el-col :span="4" style="padding: 12px 30px 12px 0px">时间</el-col>
+                    </el-row>
+                    <template v-for="(item,index) in bbsTopicData">
+                        <el-row class="list-item" v-if="!(bbsSectionType.index==1&item.tLastReplyTime==null)">
+                            <el-col :span="12" style="padding: 12px 30px 12px 20px">
+                                <div style="text-overflow: ellipsis;overflow: hidden;line-height: 24px;height: 24px;white-space: nowrap">
+                                    <span style="color: #888888;cursor:pointer" @click="clickSortTag(item.ssId)">[{{item.ssName}}]</span>
+                                    <a :href="'topic.html?tId='+item.tId">{{item.tTitle}}</a>
+                                </div>
+                            </el-col>
+                            <el-col :span="4" style="padding: 12px 30px 12px 0px">
+                                <div>{{item.uName}}</div>
+                            </el-col>
+                            <el-col :span="4" style="padding: 12px 30px 12px 0px">{{item.tClickCount}}
+                            </el-col>
+                            <el-col :span="4" style="padding: 12px 30px 12px 0px">
+                                <span v-if="bbsSectionType.index==1">
+                                    {{item.tLastReplyTime|getDate}} {{item.tLastReplyTime|getTime}}
+                                </span>
+                                <span v-else-if="bbsSectionType.index==2">
+                                    {{item.tTime|getDate}} {{item.tTime|getTime}}
+                                </span>
+
+
+                            </el-col>
+                        </el-row>
+                    </template>
+                </div>
+                <div v-else-if="bbsClassifyId!=''" class="main-right">
+                    <nav class="breadcrumb has-succeeds-separator" aria-label="breadcrumbs">
+                        <ul style="font-size: 13px">
+                            <li><a href="index.html">社区</a></li>
+                            <li class="is-active"><a href="#" aria-current="page">{{bbsClassifyData.cName}}</a></li>
+                        </ul>
+                    </nav>
+                    <div style="font-size: 20px;font-weight: 700;margin-bottom: 24px">
+                        {{bbsClassifyData.cName}}社区热帖
+                    </div>
+                    <el-row class="list-title">
+                        <el-col :span="20" style="padding: 12px 30px 12px 20px">标题</el-col>
+                        <el-col :span="2" style="padding: 12px 30px 12px 0px">热度</el-col>
+                        <el-col :span="2" style="padding: 12px 30px 12px 0px">板块</el-col>
+                    </el-row>
+                    <template v-for="(item,index) in bbsTopicData">
+                        <el-row class="list-item">
+                            <el-col :span="20" style="padding: 12px 30px 12px 20px">
+                                <div style="text-overflow: ellipsis;overflow: hidden;line-height: 24px;height: 24px;white-space: nowrap">
+                                    <span style="color: #888888;cursor:pointer" @click="clickSortTag(item.ssId)">[{{item.ssName}}]</span>
+                                    <a :href="'topic.html?tId='+item.tId">{{item.tTitle}}</a>
+                                </div>
+                            </el-col>
+                            <el-col :span="2" style="padding: 12px 30px 12px 0px">
+                                {{item.tClickCount}}<i class="el-icon-sunny"></i>
+                            </el-col>
+                            <el-col :span="2" style="padding: 12px 30px 12px 0px">
+                                <a style="font-size: 14px" :href="'thread.html?sId='+item.sId">{{item.sName}}</a>
+                            </el-col>
+                        </el-row>
+                    </template>
+                </div>
+                <div v-else>
+<!--                    <nav class="breadcrumb has-succeeds-separator" aria-label="breadcrumbs">-->
+<!--                        <ul style="font-size: 20px">-->
+<!--                            <li><a href="index.html">社区</a></li>-->
+<!--                            <li class="is-active"><a href="#" aria-current="page">热帖</a></li>-->
+<!--                        </ul>-->
+<!--                    </nav>-->
+<!--                    <div class="columns" style="background-color: #F2F6FC;">-->
+<!--                        <div class="column is-12">主版</div>-->
+<!--                    </div>-->
+                    待添加 todo:
+                </div>
+                <!--分页-->
+                <div class="" style="margin-top: 12px">
+                    <el-pagination
+                            :hide-on-single-page="page.isHide"
+                            @current-change="handleCurrentChange"
+                            background
+                            layout="prev, pager, next,jumper"
+                            :page-size="page.pageNum"
+                            :current-page="page.pageIndex"
+                            :total="page.total">
+                    </el-pagination>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <div id="footer"></div>
+</div>
+</body>
+<script>
+    new Vue({
+        el: '#thread',
+        data() {
+            return {
+                flat: 0,//2为class 1为section
+                bbsSectionId: '',//板块id
+                bbsClassifyId: '',//分类id
+                bbsSortId: 0, //分类id
+                bbsTopicData: {//主题数据
+                },
+                bbsSectionData: {
+                    bbsClassify: ''
+                },//板块数据
+                bbsClassifyData: {},//分类数据
+                bbsAllClassifyData: [],//所有分类信息
+                page: {//分页数据
+                    pageNum: 10,//每页数量
+                    pageIndex: 1,//页数
+                    total: 0,//总数
+                    isHide: true
+                },
+                bbsSectionType: {
+                    index: 1,
+                    orderName: 't_last_reply_time',
+                    orderSort: 'desc'
+                },
+                bbsSortData: []
+
+            }
+        },
+        created() {
+            let that = this;
+            const urlStr = document.URL;
+            const urlRight = urlStr.split("?")[1];
+            //无参
+            if (urlRight == null) {
+
+            } else {
+                const urlTemp = urlRight.split("&");
+                for (let i = 0; i < urlTemp.length; i++) {
+                    let temp = urlTemp[i].split("=");
+                    if (temp[0] == "sId") {
+                        that.flag = 1;
+                        //获取板块id
+                        that.bbsSectionId = temp[1];
+                        //获取板块基本信息
+                        axios.get("http://localhost:8888/section/" + that.bbsSectionId)
+                            .then(function (res) {
+                                that.bbsSectionData = res.data;
+                                document.title = res.data.sName + " - 程序员社区";
+                            }).catch(function (error) {
+                            console.log(error);
+                            that.$message({
+                                showClose: true,
+                                message: '系统繁忙',
+                                type: 'error'
+                            });
+                        });
+                        //获取板块下的主题
+                        that.findBBSTopicData();
+                        //获取主题分类
+                        that.findSort(that.bbsSectionId);
+                        break;
+                    } else if (temp[0] == "cId") {
+                        that.flag = 2;
+                        //获取社区分类id
+                        that.bbsClassifyId = temp[1];
+                        //获取社区分类基本信息
+                        axios.get("http://localhost:8888/classify/" + that.bbsClassifyId)
+                            .then(function (res) {
+                                that.bbsClassifyData = res.data;
+                                document.title = res.data.cName + " - 程序员社区";
+                            }).catch(function (error) {
+                            console.log(error);
+                            that.$message({
+                                showClose: true,
+                                message: '系统繁忙',
+                                type: 'error'
+                            });
+                        });
+                        //获取分类下的主题
+                        that.findBBSTopicData();
+                        break;
+                    }
+
+                }
+
+            }
+
+            //获取分类数据
+            axios.get("http://localhost:8888/classify")
+                .then(function (response) {
+                    that.bbsAllClassifyData = response.data;
+                })
+                .catch(function (error) {
+                    console.log(error);
+                    that.$message({
+                        showClose: true,
+                        message: '系统繁忙',
+                        type: 'error'
+                    });
+                });
+        },
+        mounted() {
+            //打字机效果
+            const typerWriterDom = document.getElementById("typerWriter");
+            const typeWriter = new Typewriter(typerWriterDom, {
+                loop: false,
+                deleteSpeed: 500
+            });
+            typeWriter
+                .typeString("-世界因我而精彩")
+                .pauseFor(1000)
+                .deleteChars(4)
+                .pauseFor(1000)
+                .typeString("你我而精彩")
+                .start();
+        },
+        methods: {
+            handleCurrentChange(index) {
+                let that = this;
+                that.page.pageIndex = index;
+                if(that.bbsSortId==0){
+                    that.findBBSTopicData();
+                }else{
+                    that.findTopicDataBySSId()
+                }
+
+            },
+            mouseenter(t) {
+                t.currentTarget.firstElementChild.nextElementSibling.style.display = 'block';
+            }
+            ,
+            mouseleave(t) {
+                t.currentTarget.firstElementChild.nextElementSibling.style.display = 'none';
+            },
+            findBBSTopicData() {
+                let that = this;
+                if (that.flag == 1) {
+                    //获取板块下的主题
+                    axios.get("http://localhost:8888/topic/s", {
+                            params: {
+                                sId: that.bbsSectionId,
+                                pageIndex: that.page.pageIndex,
+                                pageNum: that.page.pageNum,
+                                orderName: that.bbsSectionType.orderName,
+                                orderSort: that.bbsSectionType.orderSort
+                            }
+                        }
+                    ).then(function (res) {
+                        that.bbsTopicData = res.data.data;
+                        that.page.total = res.data.rowCount;
+                        if ((that.page.total / that.page.pageNum >= 1) && (that.page.total % that.page.pageNum > 0)) {
+                            that.page.isHide = false;
+                        }
+
+                    }).catch(function (error) {
+                        that.$message({
+                            showClose: true,
+                            message: '系统繁忙',
+                            type: 'error'
+                        });
+                    });
+                } else if (that.flag == 2) {
+                    //获取分类下的主题
+                    axios.get("http://localhost:8888/topic/c", {
+                            params: {
+                                cId: that.bbsClassifyId,
+                                pageIndex: that.page.pageIndex,
+                                pageNum: that.page.pageNum
+                            }
+                        }
+                    ).then(function (res) {
+                        that.bbsTopicData = res.data.data;
+                        that.page.total = res.data.rowCount;
+                        if ((that.page.total / that.page.pageNum >= 1) && (that.page.total % that.page.pageNum > 0)) {
+                            that.page.isHide = false;
+                        }
+                    }).catch(function (error) {
+                        console.log(error);
+                        that.$message({
+                            showClose: true,
+                            message: '系统繁忙',
+                            type: 'error'
+                        });
+                    });
+                }
+            },
+            //获取主题分类
+            findSort(sId) {
+                let that = this;
+                axios.get("http://localhost:8888/sort/s/" + sId)
+                    .then(function (res) {
+                        that.bbsSortData = res.data.data;
+                    }).catch(function (error) {
+                    console.log(error);
+                    that.$message({
+                        showClose: true,
+                        message: '系统繁忙',
+                        type: 'error'
+                    });
+                });
+            },
+            changBBSSectionType(e, index) {
+                let that = this;
+                var p = e.target.parentElement;
+                for (let i = 0; i < p.childElementCount; i++) {
+                    p.children[i].classList.remove('active')
+                }
+                e.target.classList.add('active')
+                if (that.bbsSectionType.index != index) {
+                    if ((that.bbsSectionType.index = index) == 1) {
+                        that.bbsSectionType.orderName = 't_last_reply_time';
+                    } else if ((that.bbsSectionType.index = index) == 2) {
+                        that.bbsSectionType.orderName = 't_time';
+                    }
+                    if(that.bbsSortId==0){
+                        that.findBBSTopicData();
+                    }else{
+                        that.findTopicDataBySSId();
+                    }
+
+
+                }
+            },
+            //切换主题分类
+            changeSort(item) {
+                let that = this;
+                that.bbsSortId = item.ssId;
+                that.findTopicDataBySSId();
+            },
+            findTopicDataBySSId(){
+                let that=this;
+                axios.get("http://localhost:8888/topic/ss", {
+                        params: {
+                            ssId: that.bbsSortId,
+                            pageIndex: that.page.pageIndex,
+                            pageNum: that.page.pageNum,
+                            orderName: that.bbsSectionType.orderName,
+                            orderSort: that.bbsSectionType.orderSort
+                        }
+                    }
+                ).then(function (res) {
+                    that.bbsTopicData = res.data.data;
+                    that.page.total = res.data.rowCount;
+                    if ((that.page.total / that.page.pageNum >= 1) && (that.page.total % that.page.pageNum > 0)) {
+                        that.page.isHide = false;
+                    }
+
+                }).catch(function (error) {
+                    that.$message({
+                        showClose: true,
+                        message: '系统繁忙',
+                        type: 'error'
+                    });
+                });
+            },
+            changeSortToAll(){
+                let that=this;
+                that.bbsSortId=0;
+                that.findBBSTopicData();
+            },
+            clickSortTag(index){
+                let that=this;
+                that.bbsSortId=index;
+                that.findTopicDataBySSId();
+            }
+
+
+        },
+        filters: {
+            getDate(res) {
+                if (typeof res != "undefined") {
+                    return res.split('T')[0];
+                }
+            },
+            getTime(res) {
+                if (typeof res != "undefined") {
+                    return res.split('T')[1];
+                }
+            }
+        }
+    });
+    $.get({
+        url: './header.html',
+        cache: true,
+        async: false,
+        success: function (html) {
+            $("#header").html(html);
+        }
+    });
+    $.get({
+        url: './footer.html',
+        cache: true,
+        async: false,
+        success: function (html) {
+            $("#footer").html(html);
+        }
+    });
+</script>
+<style>
+    body {
+        background-color: #fafafa;
+    }
+
+    #main {
+        margin-top: 10px;
+    }
+
+    .main-right {
+        background-color: white;
+        border-radius: 4px;
+        padding: 20px 20px 30px 20px;
+    }
+
+    .marin-right-info {
+        display: flex;
+        padding: 20px 0px;
+    }
+
+    .bbs-section-type {
+        display: flex;
+    }
+
+    .bbs-section-type-item {
+        margin-right: 40px;
+        border-right: none;
+        border-left: none;
+        border-top: none;
+        border-bottom: 3px solid transparent;
+        color: #191c22;
+        font-size: 14px;
+        line-height: 36px;
+        height: 36px;
+        cursor: pointer;
+    }
+
+    .active {
+        border-bottom: 3px solid #409EFF;
+        cursor: default;
+    }
+
+    .list-title {
+        background-color: #F2F6FC;
+        border-bottom: 1px solid #E4E7ED;
+        border-bottom: 1px solid #E4E7ED;
+    }
+
+    .list-item {
+        border-bottom: 1px solid #E4E7ED;
+    }
+
+    .list-item a {
+        color: rgb(74, 74, 74);
+    }
+
+    .list-item a :hover {
+
+    }
+
+    .list-item:hover {
+        background-color: #F2F6FC;;
+    }
+
+    .showdata {
+        background-color: #EBEEF5;
+        position: absolute;
+        left: 100%;
+        top: 0;
+        z-index: 1;
+        width: 400px;
+        display: none;
+    }
+
+    .showdata-item:hover {
+
+    }
+
+    .classify-list {
+        background-color: #F2F6FC;
+    }
+
+    .classify-item:hover {
+        background-color: #EBEEF5;;
+    }
+
+    .sort-item {
+        height: 30px;
+        display: flex;
+        background-color: #fafafa;
+        justify-content: center;
+        line-height: 30px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.5s;
+    }
+
+    .sort-item:hover {
+        background-color: rgb(64, 158, 255);
+        color: white;
+    }
+
+    .sort-item-select {
+        height: 30px;
+        display: flex;
+        background-color: #fafafa;
+        justify-content: center;
+        line-height: 30px;
+        border-radius: 4px;
+        cursor: pointer;
+        background-color: rgb(64, 158, 255);
+        color: white;
+    }
+</style>
+</html>

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <!-- css -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/mzc5649/CDN/bulma-0.9.0/css/bulma.css">
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/mzc5649/CDN/element-ui@2.13.1/lib/theme-chalk/index.css">
+    <!-- js -->
+    <script src="https://cdn.jsdelivr.net/gh/mzc5649/CDN/vue/2.6.11/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/mzc5649/CDN/typerwriterJS/1.0.0/typewriter.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/mzc5649/CDN/axios@0.20.0/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/mzc5649/CDN/jquery@1.12.4/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/mzc5649/CDN/element-ui@2.13.1/lib/index.js"></script>
+    <!-- Include Editor style. -->
+    <link href="https://cdn.jsdelivr.net/npm/froala-editor@latest/css/froala_editor.pkgd.min.css" rel="stylesheet"
+          type="text/css"/>
+    <!-- Include Editor JS files. -->
+    <script type="text/javascript"
+            src="https://cdn.jsdelivr.net/npm/froala-editor@latest/js/froala_editor.pkgd.min.js"></script>
+    <script src="https://cdn.bootcss.com/froala-editor/3.0.6/js/languages/zh_cn.js"></script>
+
+</head>
+<body>
+<div id="post" v-cloak>
+    <div id="header"></div>
+    <div class="container is-fluid">
+        <div class="main">
+            <!--面包屑-->
+            <nav class="breadcrumb has-succeeds-separator" aria-label="breadcrumbs">
+                <ul style="font-size: 13px">
+                    <li><a href="index.html">社区</a></li>
+                    <li><a :href="'thread.html?cId='+bbsSectionData.bbsClassify.cId">{{bbsSectionData.bbsClassify.cName}}</a>
+                    </li>
+                    <li><a :href="'thread.html?sId='+bbsSectionData.sId">{{bbsSectionData.sName}}</a></li>
+                </ul>
+            </nav>
+            <div style="padding: 10px 0"><i class="el-icon-edit" style="font-size: 20px">发帖子</i></div>
+                <el-select v-model="bbsSortId" placeholder="请选择主题">
+                    <el-option
+                            v-for="item in bbsSortData"
+                            :key="item.ssId"
+                            :label="item.ssName"
+                            :value="item.ssId">
+                    </el-option>
+                </el-select>
+            <el-input v-model="postData.title" placeholder="请输入标题" style="padding: 10px 0">
+            </el-input>
+            <textarea id="editor"></textarea>
+            <el-button type="primary" @click="submitTopic" style="margin-top: 10px">发布</el-button>
+        </div>
+    </div>
+</div>
+</body>
+<script>
+    new Vue({
+        el: "#post",
+        data() {
+            return {
+                bbsSectionId: '',
+                bbsSectionData: {
+                    bbsClassify: ''
+                },
+                postData: {
+                    title: "",
+                },
+                bbsSortData: [],
+                bbsSortId:''
+            }
+        },
+        created() {
+            const that = this;
+            const editor = null;
+            const urlStr = document.URL;
+            const urlRight = urlStr.split("?")[1];
+            //无参
+            if (urlRight == null) {
+
+            } else {
+                const urlTemp = urlRight.split("&");
+                for (let i = 0; i < urlTemp.length; i++) {
+                    let temp = urlTemp[i].split("=");
+                    if (temp[0] == "sId") {
+                        that.bbsSectionId = temp[1];
+                        //获取板块基本信息
+                        axios.get("http://localhost:8888/section/" + that.bbsSectionId)
+                            .then(function (res) {
+                                that.bbsSectionData = res.data;
+                                document.title = res.data.sName + " - 程序员社区";
+                            }).catch(function (error) {
+                            console.log(error);
+                            that.$message({
+                                showClose: true,
+                                message: '系统繁忙',
+                                type: 'error'
+                            });
+                        });
+                        //获取主题分类
+                        that.findSort(that.bbsSectionId);
+
+                    }
+                }
+
+            }
+        },
+        mounted() {
+            editor = new FroalaEditor('textarea', {
+                language: 'zh_cn'
+            });
+        },
+        methods: {
+            submitTopic() {
+                const that = this;
+                let topicData = {
+                    sId: that.bbsSectionData.sId,
+                    tTitle: that.postData.title,
+                    uId: 1,
+                    ssId:that.bbsSortId,
+                    tContent: editor.html.get()
+                }
+                axios.post("http://localhost:8888/topic", topicData)
+                    .then(function (res) {
+                        if (res.data == 'success') {
+                            that.postData.title = '';
+                            editor.html.set('');
+                            that.$message({
+                                showClose: true,
+                                message: '发布成功',
+                                type: 'success'
+                            });
+                        }
+                    }).catch(function (error) {
+                    console.log(error)
+                });
+            },
+            //获取主题分类
+            findSort(sId) {
+                let that = this;
+                axios.get("http://localhost:8888/sort/s/" + sId)
+                    .then(function (res) {
+                        that.bbsSortData = res.data.data;
+                    }).catch(function (error) {
+                    console.log(error);
+                    that.$message({
+                        showClose: true,
+                        message: '系统繁忙',
+                        type: 'error'
+                    });
+                });
+            }
+        },
+        computed: {}
+    });
+    $.get({
+        url: './header.html',
+        cache: true,
+        async: false,
+        success: function (html) {
+            $("#header").html(html);
+        }
+    });
+</script>
+<style>
+    body {
+        background-color: #fafafa;
+    }
+
+    .main {
+        padding: 20px 20px 30px 20px;
+        background-color: white;
+        border-radius: 4px;
+        margin-top: 10px;
+    }
+
+
+</style>
+</html>
