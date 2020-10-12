@@ -1,0 +1,45 @@
+[v-cloak] {
+    display: none;
+}
+.bg-rainbow {
+    background-image: linear-gradient(124deg, #dec02b, #d8da69, #f5e095, #82ff59);
+    -webkit-animation: rainbow 8s ease infinite;
+    animation: rainbow 8s ease infinite;
+    background-size: 200% 200%;
+}
+
+.bg-unnormal {
+    background-color: #ffcc99;
+}
+
+.bg-normal {
+    background-color: #ffffcc;
+}
+
+#section {
+    color: white;
+}
+
+@-webkit-keyframes rainbow {
+    0% {
+        background-position: 1% 80%;
+    }
+    50% {
+        background-position: 99% 20%;
+    }
+    100% {
+        background-position: 1% 80%;
+    }
+}
+
+@keyframes rainbow {
+    0% {
+        background-position: 1% 80%;
+    }
+    50% {
+        background-position: 99% 20%;
+    }
+    100% {
+        background-position: 1% 80%;
+    }
+}

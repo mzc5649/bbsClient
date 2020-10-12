@@ -51,6 +51,7 @@
             </div>
         </template>
     </div>
+    <div id="footer"></div>
 </div>
 </body>
 <script>
@@ -65,7 +66,7 @@
             created() {
                 let that = this;
                 //数据获取
-                axios.get("http://localhost:8888/classify")
+                axios.get("http://192.168.137.231:7777/bbs-topic-server/classify")
                     .then(function (response) {
                         that.bbsClassifyData = response.data;
                     })
@@ -98,6 +99,14 @@
         async: false,
         success: function (html) {
             $("#header").html(html);
+        }
+    });
+    $.get({
+        url: './footer.html',
+        cache: true,
+        async: false,
+        success: function (html) {
+            $("#footer").html(html);
         }
     });
 </script>

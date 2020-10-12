@@ -7,12 +7,12 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * 描述：
  *
  * @Author: 马志朝
- * @Date: 2020/9/29 15:11
+ * @Date: 2020/10/12 17:02
  */
 
 @SpringBootApplication
-public class BBSClientApp {
+public class ClientApp {
     public static void main(String[] args) {
-        SpringApplication.run(BBSClientApp.class, args);
+        SpringApplication.run(ClientApp.class,args);
     }
 }

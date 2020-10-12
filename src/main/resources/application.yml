@@ -1,5 +1,2 @@
 server:
-  port: 7777
-spring:
-  application:
-    name: bbs-client
+  port: 8080
